@@ -1,0 +1,107 @@
+/**
+ * This Firestore Security Ruleset is designed for a user-centric application,
+ * creating a strong security boundary between different users' data.
+ *
+ * Core Philosophy:
+ * The rules enforce a strict user-ownership model. Each user has exclusive control
+ * over their own documents and cannot read, write, or even discover the existence
+ * of data belonging to other users. This is a "private-by-default" model.
+ *
+ * Data Structure:
+ * The data is organized into two top-level collections:
+ * - /userAccounts/{userId}: Stores private account and authentication-related info.
+ * - /userProfiles/{userId}: Stores public-facing and detailed profile information.
+ * In both cases, the document's unique ID is the same as the Firebase Authentication
+ * User ID (UID), which creates a direct and performant link between a user and their data.
+ *
+ * Key Security Decisions:
+ * - User Data Isolation: All rules are scoped to the authenticated user (`request.auth.uid`).
+ *   A user can ONLY access documents where the document ID matches their UID.
+ * - No User Enumeration: `list` operations are explicitly disabled on all top-level
+ *   collections. This prevents malicious actors from querying collections to discover
+ *   and harvest a list of all user IDs in the system.
+ * - Account Deletion Disabled: Deleting a `userAccount` document is disabled by default
+ *   to prevent accidental data loss. Typically, applications should implement a "soft delete"
+ *   or deactivation flag instead of hard deletion of the core account record.
+ *
+ * Denormalization for Authorization:
+ * This ruleset relies on using the user's Authentication UID as the document ID for
+ * both `/userAccounts` and `/userProfiles`. This is a highly performant security pattern
+ * that avoids slow and costly `get()` or `exists()` calls to other documents for
+ * authorization checks. The rules also enforce that internal ID fields within the
+ * documents (`id`, `userAccountId`) match the document ID upon creation to ensure
+ * data integrity from the start.
+ *
+ * Structural Segregation:
+ * The separation of `userAccounts` (sensitive, private data) from `userProfiles`
+ * provides a clear structural boundary for different data access patterns, even though
+ * in this initial version, both are treated as private to the owner.
+ */
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Checks if the request is coming from a signed-in user.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Validates that the requesting user's UID matches the document's ID.
+     * This is the primary function for enforcing data ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Ensures an update or delete operation targets an existing document
+     * and that the requesting user is the legitimate owner. This prevents
+     * modifying non-existent data and combines ownership with an existence check.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Secures user account documents, which store essential, private user data.
+     * @path /userAccounts/{userAccountId}
+     * @allow A signed-in user (create)s their own account document using their UID as the document ID.
+     * @deny An anonymous user tries to read an account or a signed-in user tries to list all accounts.
+     * @principle Restricts all access to a user's own data tree and prevents user enumeration.
+     */
+    match /userAccounts/{userAccountId} {
+      allow get: if isOwner(userAccountId);
+      allow list: if false;
+      allow create: if isOwner(userAccountId) && request.resource.data.id == userAccountId;
+      allow update: if isExistingOwner(userAccountId) && request.resource.data.id == resource.data.id;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Secures user profile documents, containing personal but non-critical info.
+     * @path /userProfiles/{userProfileId}
+     * @allow A signed-in user (update)s their own profile document.
+     * @deny A signed-in user attempts to (get) another user's profile document by guessing their ID.
+     * @principle Enforces document ownership and validates relational integrity between the document's path and its internal ownership fields.
+     */
+    match /userProfiles/{userProfileId} {
+      allow get: if isOwner(userProfileId);
+      allow list: if false;
+      allow create: if isOwner(userProfileId) && request.resource.data.id == userProfileId && request.resource.data.userAccountId == userProfileId;
+      allow update: if isExistingOwner(userProfileId) && request.resource.data.id == resource.data.id && request.resource.data.userAccountId == resource.data.userAccountId;
+      allow delete: if isExistingOwner(userProfileId);
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "user1",
+      "description": "User avatar for Jane Doe",
+      "imageUrl": "https://images.unsplash.com/photo-1592621385612-4d7129426394?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc2Mzc0NTI0MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "user2",
+      "description": "User avatar for John Smith",
+      "imageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjM4MDkyNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "merchant_qr",
+      "description": "Sample QR code for a merchant",
+      "imageUrl": "https://images.unsplash.com/photo-1629128625414-374a9e16d56a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxxciUyMGNvZGV8ZW58MHx8fHwxNzYzNzI5MTc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "qr code"
+    },
+    {
+      "id": "offer1",
+      "description": "Promotional offer banner",
+      "imageUrl": "https://images.unsplash.com/photo-1607083206203-821b1f96c7f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzaG9wcGluZyUyMHNhbGV8ZW58MHx8fHwxNzYzNzg1NjM3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "shopping sale"
+    }
+  ]
+}
